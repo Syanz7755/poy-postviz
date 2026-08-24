@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+
+# Generated SCUFF-EM inputs, outputs, and large local artifacts.
+evpoints/
+evpoints_plots/
+in/
+materials/
+mshs/
+results-batches/
+scuffgeo/
+slice_demo/
+slice_report/
+slice_runs/
+test_output/
+*.mph
+*.xlsx
+*.png
+*.pdf

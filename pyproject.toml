@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "poy-scuffem-postprocess"
+version = "0.1.0"
+description = "SCUFF-EM setup and Poynting-flux post-processing tools."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.23",
+    "scipy>=1.9",
+    "pandas>=1.5",
+    "matplotlib>=3.6",
+]
+
+[tool.setuptools]
+py-modules = [
+    "batch_postprocess",
+    "plot_integrated_flux",
+]

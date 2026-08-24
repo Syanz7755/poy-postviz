@@ -34,3 +34,22 @@ This runs the ordered stages:
 
 Outputs are written under `{out-root}/{batch-name}/`; raw input directories are
 not modified.
+
+## Input and output directory management
+
+The post-processing tools accept input and output locations explicitly, so raw
+SCUFF-EM task directories can be kept separate from derived results. The main
+batch workflow uses `--task-dir` for the input task directory and `--out-root`
+for the output root:
+
+```bash
+python batch_postprocess.py run-python-flux \
+  --task-dir D:/scuffem/tasks/ord3-results \
+  --out-root D:/analysis/poy \
+  --batch-name ord3_case1
+```
+
+Other utilities use the same convention with `--out-dir` or `--out` when they
+produce a single dataset or figure set. Check each subcommand's `--help` output
+for its exact input and output options. Generated results should be stored
+under a dedicated output root and are excluded from Git by `.gitignore`.

@@ -123,6 +123,7 @@ def python_integrated_flux_batch(
     out_root: str | Path,
     batch_name: str,
     configs: list[str] | None = None,
+    out_dir: str | Path | None = None,
     planes: list[float] | None = None,
     color_by_list: list[str] | None = None,
     stride: int = 1,
@@ -147,7 +148,11 @@ def python_integrated_flux_batch(
     results = {}
     for config in config_names:
         dataset_dir = batch_dir / config / "data"
-        fig_dir = batch_dir / config / "figures" / "integrated_flux"
+        if out_dir is None:
+            fig_dir = batch_dir / config / "figures" / "integrated_flux"
+        else:
+            requested = Path(out_dir).resolve()
+            fig_dir = requested if len(config_names) == 1 else requested / config
         results[config] = run_integrated_flux(
             dataset_dir=dataset_dir,
             out_dir=fig_dir,
@@ -162,6 +167,52 @@ def python_integrated_flux_batch(
             figure_format=figure_format,
         )
     return {"batch_dir": batch_dir, "configs": config_names, "results": results}
+
+
+def merge_collected_outputs(
+    input_dirs: list[str | Path], out_dir: str | Path,
+) -> dict[str, Any]:
+    """Merge collected ``merged_srflux.tsv`` datasets without changing inputs.
+
+    Each input may be a batch directory or an output root containing batch
+    directories. Datasets are grouped by their config directory name and
+    duplicate rows are removed using all TSV columns.
+    """
+    sources = [Path(item).resolve() for item in input_dirs]
+    destination = Path(out_dir).resolve()
+    files: list[Path] = []
+    for source in sources:
+        if source.is_file() and source.name == "merged_srflux.tsv":
+            files.append(source)
+        elif source.is_dir():
+            direct = source / "data" / "merged_srflux.tsv"
+            if direct.exists():
+                files.append(direct)
+            files.extend(sorted(source.glob("*/data/merged_srflux.tsv")))
+            files.extend(sorted(source.glob("*/*/data/merged_srflux.tsv")))
+    files = list(dict.fromkeys(files))
+    if not files:
+        raise FileNotFoundError("no merged_srflux.tsv found in input directories")
+
+    import pandas as pd
+    grouped: dict[str, list[pd.DataFrame]] = {}
+    for path in files:
+        config = path.parent.parent.name
+        grouped.setdefault(config, []).append(pd.read_csv(path, sep="\t"))
+
+    outputs = {}
+    for config, frames in sorted(grouped.items()):
+        merged = pd.concat(frames, ignore_index=True).drop_duplicates()
+        target = destination / config / "data"
+        target.mkdir(parents=True, exist_ok=True)
+        output = target / "merged_srflux.tsv"
+        merged.to_csv(output, sep="\t", index=False)
+        outputs[config] = {"path": output, "rows": int(len(merged)), "sources": len(frames)}
+
+    destination.mkdir(parents=True, exist_ok=True)
+    manifest = destination / "merge_manifest.yaml"
+    manifest.write_text(yaml.dump({"inputs": [str(p) for p in sources], "files": [str(p) for p in files], "configs": outputs}, sort_keys=False), encoding="utf-8")
+    return {"out_dir": destination, "configs": outputs, "manifest": manifest}
 
 
 def siflux_batch(
@@ -296,6 +347,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_flux = subparsers.add_parser("python-integrated-flux", help="Only run Python integration + plotting on an existing batch.")
     p_flux.add_argument("--out-root", required=True)
     p_flux.add_argument("--batch-name", required=True)
+    p_flux.add_argument("--out-dir", default=None, help="Figure output directory; for multiple configs, one subdirectory is created per config.")
     p_flux.add_argument("--configs", default=None)
     p_flux.add_argument("--planes", default="0.75,1.0,1.5")
     p_flux.add_argument("--color-by", default="absSxy,Sz")
@@ -306,6 +358,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_flux.add_argument("--colormap", default="rainbow", help="Matplotlib colormap name.")
     p_flux.add_argument("--figure-format", default="png", help="Figure format(s), comma-separated. Default: png.")
     p_flux.set_defaults(include_quiver=True)
+
+    p_merge = subparsers.add_parser("merge", help="Merge collected outputs from one or more batch directories.")
+    p_merge.add_argument("--input-dir", action="append", required=True, help="Input batch/output directory; repeat for multiple sources.")
+    p_merge.add_argument("--out-dir", required=True, help="New output directory; inputs are never modified.")
 
     p_siflux = subparsers.add_parser("siflux", help="Only run SIFlux validity/recompute analysis.")
     add_common(p_siflux)
@@ -348,6 +404,7 @@ def main() -> None:
             out_root=args.out_root,
             batch_name=args.batch_name,
             configs=configs,
+            out_dir=args.out_dir,
             planes=parse_csv_floats(args.planes),
             color_by_list=parse_csv_strings(args.color_by),
             stride=args.stride,
@@ -358,6 +415,10 @@ def main() -> None:
             figure_format=args.figure_format,
         )
         print(f"Python integrated flux complete: {result['batch_dir']}")
+    elif args.command == "merge":
+        result = merge_collected_outputs(args.input_dir, args.out_dir)
+        print(f"Merged {len(result['configs'])} configs into: {result['out_dir']}")
+        print(f"Manifest: {result['manifest']}")
     elif args.command == "siflux":
         if args.batch_name is None:
             print("ERROR: --batch-name is required for siflux output placement", file=sys.stderr)

@@ -53,3 +53,41 @@ Other utilities use the same convention with `--out-dir` or `--out` when they
 produce a single dataset or figure set. Check each subcommand's `--help` output
 for its exact input and output options. Generated results should be stored
 under a dedicated output root and are excluded from Git by `.gitignore`.
+
+## Merge existing outputs and visualize them
+
+Collected outputs from earlier batches can be merged into a new directory. The
+inputs are read-only; duplicate rows are removed using all TSV columns, and a
+`merge_manifest.yaml` records the sources:
+
+```bash
+python batch_postprocess.py merge \
+  --input-dir results-batches/batch_a \
+  --input-dir results-batches/batch_b \
+  --out-dir results-batches/merged_cases
+```
+
+The merged directory keeps the normal `<config>/data/merged_srflux.tsv` layout,
+so it can be passed directly to the existing integration/visualization stage
+by giving it a batch directory and a batch name:
+
+```bash
+python batch_postprocess.py python-integrated-flux \
+  --out-root results-batches \
+  --batch-name merged_cases \
+  --configs config_name \
+  --out-dir results-batches/merged_cases/config_name/figures/integrated_flux
+```
+
+For a single collected dataset, the lower-level interface is explicit about
+both locations:
+
+```bash
+python plot_integrated_flux.py \
+  --dataset results-batches/merged_cases/config_name/data \
+  --out results-batches/merged_cases/config_name/figures/integrated_flux
+```
+
+Scripts tied to one geometry, evpoint layout, or diagnostic result are under
+`scripts/specialized/`. The root-level Python modules are the reusable batch
+processing and plotting entry points.

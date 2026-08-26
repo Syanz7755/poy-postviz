@@ -5,16 +5,16 @@ post-processing scripts for spatially resolved Poynting-vector analysis.
 
 Start here for results-batch processing:
 
-- [README_postproc.md](README_postproc.md): ordered post-processing workflow
-- [README_subtasks.md](README_subtasks.md): subtask layout and naming rules
-- [README_scuffneq.md](README_scuffneq.md): SCUFF-EM run notes
+- [docs/README_postproc.md](docs/README_postproc.md): ordered post-processing workflow
+- [docs/README_subtasks.md](docs/README_subtasks.md): subtask layout and naming rules
+- [docs/README_scuffneq.md](docs/README_scuffneq.md): SCUFF-EM run notes
 
 ## Main Workflow
 
-Use `batch_postprocess.py` for new batch results:
+Use `scripts/core/batch_postprocess.py` for new batch results:
 
 ```bash
-python batch_postprocess.py run-python-flux \
+python -m scripts.core.batch_postprocess run-python-flux \
   --task-dir results-batches/ord3-results \
   --out-root results-batches/ord3_processed \
   --batch-name 20260708_python_integrated_flux \
@@ -43,7 +43,7 @@ batch workflow uses `--task-dir` for the input task directory and `--out-root`
 for the output root:
 
 ```bash
-python batch_postprocess.py run-python-flux \
+python -m scripts.core.batch_postprocess run-python-flux \
   --task-dir D:/scuffem/tasks/ord3-results \
   --out-root D:/analysis/poy \
   --batch-name ord3_case1
@@ -61,7 +61,7 @@ inputs are read-only; duplicate rows are removed using all TSV columns, and a
 `merge_manifest.yaml` records the sources:
 
 ```bash
-python batch_postprocess.py merge \
+python -m scripts.core.batch_postprocess merge \
   --input-dir results-batches/batch_a \
   --input-dir results-batches/batch_b \
   --out-dir results-batches/merged_cases
@@ -72,7 +72,7 @@ so it can be passed directly to the existing integration/visualization stage
 by giving it a batch directory and a batch name:
 
 ```bash
-python batch_postprocess.py python-integrated-flux \
+python -m scripts.core.batch_postprocess python-integrated-flux \
   --out-root results-batches \
   --batch-name merged_cases \
   --configs config_name \
@@ -83,11 +83,12 @@ For a single collected dataset, the lower-level interface is explicit about
 both locations:
 
 ```bash
-python plot_integrated_flux.py \
+python -m scripts.core.plot_integrated_flux \
   --dataset results-batches/merged_cases/config_name/data \
   --out results-batches/merged_cases/config_name/figures/integrated_flux
 ```
 
-Scripts tied to one geometry, evpoint layout, or diagnostic result are under
-`scripts/specialized/`. The root-level Python modules are the reusable batch
-processing and plotting entry points.
+Reusable processing modules are under `scripts/core/`; scripts tied to one
+geometry, evpoint layout, or diagnostic result are under `scripts/specialized/`.
+Input notes are under `docs/`. The root contains only project metadata, the
+main README, and material files needed by legacy SCUFF-EM setup workflows.

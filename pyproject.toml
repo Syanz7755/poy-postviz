@@ -17,7 +17,4 @@ dependencies = [
 ]
 
 [tool.setuptools]
-py-modules = [
-    "batch_postprocess",
-    "plot_integrated_flux",
-]
+packages = ["scripts", "scripts.core"]

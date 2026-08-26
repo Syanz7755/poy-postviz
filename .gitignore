@@ -6,6 +6,9 @@ evpoints/
 evpoints_plots/
 in/
 materials/
+!inputs/
+!inputs/materials/
+!inputs/materials/*
 mshs/
 results-batches/
 scuffgeo/

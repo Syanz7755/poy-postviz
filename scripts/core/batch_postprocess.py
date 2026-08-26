@@ -21,9 +21,13 @@ from typing import Any
 
 import yaml
 
-import postproc_scuffem
-import scuff_pv_post
-from plot_integrated_flux import run_integrated_flux
+try:
+    from . import postproc_scuffem, scuff_pv_post
+    from .plot_integrated_flux import run_integrated_flux
+except ImportError:  # direct execution from scripts/core
+    import postproc_scuffem
+    import scuff_pv_post
+    from plot_integrated_flux import run_integrated_flux
 
 
 @dataclass(frozen=True)

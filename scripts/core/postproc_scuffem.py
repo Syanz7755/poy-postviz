@@ -13,7 +13,8 @@ from datetime import datetime
 from collections import defaultdict
 
 
-ROOT = Path(r"D:\Researches\wqs_comps\poy")
+ROOT = Path(__file__).resolve().parents[2]
+MATERIAL_DIR = ROOT / "inputs" / "materials"
 
 RUN_HEADER_RE = re.compile(r"^#\s*scuff-neq run on\s+")
 SUBTASK_DIR_RE = re.compile(r"^subtask-(.+)-(\d+)$")
@@ -327,7 +328,7 @@ def select_material_file() -> tuple[str, str]:
     Priority: 2k+ > 53p > 27p.  Raises FileNotFoundError if none.
     """
     # 1. 2k+ point file
-    high_res = ROOT / "aligned_SiO2-Franta-300C.txt"
+    high_res = MATERIAL_DIR / "aligned_SiO2-Franta-300C.txt"
     if high_res.exists():
         content = high_res.read_text(encoding="utf-8")
         n_data = sum(1 for ln in content.splitlines() if ln.strip() and not ln.strip().startswith("#"))
@@ -354,7 +355,9 @@ def select_material_file() -> tuple[str, str]:
         return "\n".join(out), "silica-53p.dat"
 
     # 3. 27-point
-    p27 = ROOT / "materials" / "silica-27p.txt"
+    p27 = MATERIAL_DIR / "silica-27p.txt"
+    if not p27.exists():
+        p27 = MATERIAL_DIR / "silica-27p.dat"
     if p27.exists():
         return p27.read_text(encoding="utf-8"), "silica-27p.dat"
 

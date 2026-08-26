@@ -6,6 +6,8 @@ These modules implement the supported reusable workflow:
 - `plot_integrated_flux.py`: integrate a collected dataset and create figures;
 - `postproc_scuffem.py`: validate SCUFF-EM output and prepare recomputations;
 - `scuff_pv_post.py`: collect spatial-flux datasets.
+- `visualize_result_dir.py`: visualize a collected result directory with one
+  required argument.
 
 Run them from the project root with `python -m scripts.core.<module>` so the
 package imports and project-relative paths remain stable.

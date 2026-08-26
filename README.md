@@ -79,14 +79,30 @@ python -m scripts.core.batch_postprocess python-integrated-flux \
   --out-dir results-batches/merged_cases/config_name/figures/integrated_flux
 ```
 
-For a single collected dataset, the lower-level interface is explicit about
-both locations:
+To visualize a prepared result directory, only the result directory is
+required. The script automatically recognizes a dataset directory containing
+`merged_srflux.tsv`, a `data/` directory, or a batch directory containing
+multiple config datasets. Figures are written below the result directory by
+default:
 
 ```bash
-python -m scripts.core.plot_integrated_flux \
-  --dataset results-batches/merged_cases/config_name/data \
-  --out results-batches/merged_cases/config_name/figures/integrated_flux
+python scripts/core/visualize_result_dir.py \
+  --result-dir results-batches/merged_cases/config_name/data
 ```
+
+Optional plotting arguments are forwarded to the existing integration and
+plotting implementation, for example:
+
+```bash
+python scripts/core/visualize_result_dir.py \
+  --result-dir results-batches/merged_cases/config_name/data \
+  --out-dir figures/my_case \
+  --planes 0.75,1.0,1.5 \
+  --color-by absSxy,Sz \
+  --no-quiver
+```
+
+The equivalent module form is `python -m scripts.core.visualize_result_dir`.
 
 Reusable processing modules are under `scripts/core/`; scripts tied to one
 geometry, evpoint layout, or diagnostic result are under `scripts/specialized/`.
